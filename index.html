@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Gerenciador de Equipamentos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #d1d5db;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            width: auto;
+            margin: 0 0.5rem 0.5rem 0;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .status-ativo {
+            background: #10b981;
+        }
+
+        .status-inativo {
+            background: #6b7280;
+        }
+
+        .status-quebrado {
+            background: #ef4444;
+        }
+
+        .status-manutencao {
+            background: #f59e0b;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #047857;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #9ca3af;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 2px dashed #e5e7eb;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #d1d5db;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏭 CMMS</h1>
+            <p>Gerenciador de Equipamentos</p>
+        </header>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="main-content">
+            <!-- Formulário -->
+            <div class="card">
+                <h2 id="formTitle">Novo Equipamento</h2>
+                <form id="equipamentoForm">
+                    <div class="form-group">
+                        <label for="nome">Nome do Equipamento *</label>
+                        <input type="text" id="nome" placeholder="Ex: Compressor industrial" required>
+                        <span id="nomeError" class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="codigo">Código *</label>
+                        <input type="text" id="codigo" placeholder="Ex: COMP-001" required>
+                        <span id="codigoError" class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status *</label>
+                        <select id="status" required>
+                            <option value="ATIVO">ATIVO</option>
+                            <option value="INATIVO">INATIVO</option>
+                            <option value="QUEBRADO">QUEBRADO</option>
+                            <option value="MANUTENCAO">MANUTENÇÃO</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn" id="btnSubmit">Cadastrar</button>
+                    <button type="button" id="btnCancelar" class="btn btn-secondary" style="display: none;">Cancelar</button>
+                </form>
+            </div>
+
+            <!-- Lista de Equipamentos -->
+            <div class="card">
+                <h2>Equipamentos</h2>
+                <div id="listaEquipamentos">
+                    <div class="loading">Carregando equipamentos...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>© 2026 CMMS v1.0 - Gerenciamento de Manutenção</footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/equipamento';
+        let currentPage = 0;
+        const pageSize = 10;
+        let equipamentoEditando = null;
+
+        // Elementos do DOM
+        const form = document.getElementById('equipamentoForm');
+        const inputNome = document.getElementById('nome');
+        const inputCodigo = document.getElementById('codigo');
+        const inputStatus = document.getElementById('status');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const btnCancelar = document.getElementById('btnCancelar');
+        const listaEquipamentos = document.getElementById('listaEquipamentos');
+        const alert = document.getElementById('alert');
+        const formTitle = document.getElementById('formTitle');
+
+        // Event Listeners
+        form.addEventListener('submit', handleSubmit);
+        btnCancelar.addEventListener('click', cancelarEdicao);
+
+        // Carregar equipamentos ao iniciar
+        carregarEquipamentos();
+
+        async function carregarEquipamentos() {
+            try {
+                const response = await fetch(`${API_URL}?page=${currentPage}&size=${pageSize}&sort=nome`);
+                if (!response.ok) throw new Error('Erro ao carregar equipamentos');
+
+                const data = await response.json();
+                renderizarTabela(data.content || data);
+            } catch (error) {
+                mostrarAlerta('Erro ao carregar equipamentos: ' + error.message, 'error');
+                listaEquipamentos.innerHTML = '<div class="empty-state">Erro ao conectar com o servidor</div>';
+            }
+        }
+
+        function renderizarTabela(equipamentos) {
+            if (!equipamentos || equipamentos.length === 0) {
+                listaEquipamentos.innerHTML = '<div class="empty-state">Nenhum equipamento encontrado</div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Código</th>
+                            <th>Status</th>
+                            <th>Data Aquisição</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            equipamentos.forEach(eq => {
+                const statusClass = `status-${eq.status.toLowerCase()}`;
+                const data = new Date(eq.dataAquisicao).toLocaleDateString('pt-BR');
+                html += `
+                    <tr>
+                        <td>${eq.id}</td>
+                        <td><strong>${eq.nome}</strong></td>
+                        <td>${eq.codigo}</td>
+                        <td><span class="status-badge ${statusClass}">${eq.status}</span></td>
+                        <td>${data}</td>
+                        <td>
+                            <button type="button" class="btn btn-small btn-edit" onclick="editarEquipamento(${eq.id})">✏️ Editar</button>
+                            <button type="button" class="btn btn-small btn-delete" onclick="deletarEquipamento(${eq.id})">🗑️ Deletar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button onclick="mudarPagina(-1)" ${currentPage === 0 ? 'disabled' : ''}>← Anterior</button>
+                    <span>Página ${currentPage + 1}</span>
+                    <button onclick="mudarPagina(1)">Próxima →</button>
+                </div>
+            `;
+
+            listaEquipamentos.innerHTML = html;
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            if (!validarFormulario()) return;
+
+            const dados = {
+                nome: inputNome.value.trim(),
+                codigo: inputCodigo.value.trim(),
+                status: inputStatus.value
+            };
+
+            if (equipamentoEditando) {
+                dados.id = equipamentoEditando.id;
+            }
+
+            try {
+                btnSubmit.disabled = true;
+
+                const metodo = equipamentoEditando ? 'PUT' : 'POST';
+                const response = await fetch(API_URL, {
+                    method: metodo,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                if (!response.ok) throw new Error('Erro ao salvar equipamento');
+
+                mostrarAlerta(
+                    equipamentoEditando ? 'Equipamento atualizado!' : 'Equipamento cadastrado!',
+                    'success'
+                );
+                limparFormulario();
+                carregarEquipamentos();
+            } catch (error) {
+                mostrarAlerta('Erro: ' + error.message, 'error');
+            } finally {
+                btnSubmit.disabled = false;
+            }
+        }
+
+        async function editarEquipamento(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                if (!response.ok) throw new Error('Equipamento não encontrado');
+
+                equipamentoEditando = await response.json();
+
+                inputNome.value = equipamentoEditando.nome;
+                inputCodigo.value = equipamentoEditando.codigo;
+                inputStatus.value = equipamentoEditando.status;
+
+                formTitle.textContent = 'Editar Equipamento';
+                btnSubmit.textContent = 'Atualizar';
+                btnCancelar.style.display = 'block';
+
+                window.scrollTo(0, 0);
+            } catch (error) {
+                mostrarAlerta('Erro ao carregar equipamento: ' + error.message, 'error');
+            }
+        }
+
+        function cancelarEdicao() {
+            limparFormulario();
+        }
+
+        function limparFormulario() {
+            form.reset();
+            equipamentoEditando = null;
+            formTitle.textContent = 'Novo Equipamento';
+            btnSubmit.textContent = 'Cadastrar';
+            btnCancelar.style.display = 'none';
+            document.getElementById('nomeError').textContent = '';
+            document.getElementById('codigoError').textContent = '';
+        }
+
+        async function deletarEquipamento(id) {
+            if (!confirm('Tem certeza que deseja deletar este equipamento?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Erro ao deletar equipamento');
+
+                mostrarAlerta('Equipamento deletado!', 'success');
+                carregarEquipamentos();
+            } catch (error) {
+                mostrarAlerta('Erro: ' + error.message, 'error');
+            }
+        }
+
+        function mudarPagina(direcao) {
+            currentPage += direcao;
+            if (currentPage < 0) currentPage = 0;
+            carregarEquipamentos();
+            window.scrollTo(0, 0);
+        }
+
+        function validarFormulario() {
+            let valido = true;
+            document.getElementById('nomeError').textContent = '';
+            document.getElementById('codigoError').textContent = '';
+
+            if (!inputNome.value.trim()) {
+                document.getElementById('nomeError').textContent = 'Nome é obrigatório';
+                inputNome.classList.add('error');
+                valido = false;
+            } else {
+                inputNome.classList.remove('error');
+            }
+
+            if (!inputCodigo.value.trim()) {
+                document.getElementById('codigoError').textContent = 'Código é obrigatório';
+                inputCodigo.classList.add('error');
+                valido = false;
+            } else {
+                inputCodigo.classList.remove('error');
+            }
+
+            return valido;
+        }
+
+        function mostrarAlerta(mensagem, tipo) {
+            alert.textContent = mensagem;
+            alert.className = `alert ${tipo === 'success' ? 'alert-success' : 'alert-error'} show`;
+
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
